@@ -10,7 +10,6 @@
 #define NUM_SECTORS (80)
 #define xNUM_SECTORS (60)
 #define LAST_CHR (24)
-#define xUPPER_BOUND_CHR (19)
 #define TOLWHITELINES (0.1)
 #define MAX_LENGTH_BAM (38841)
 #define LENGHT_EXP (40000)
@@ -32,8 +31,6 @@
 #define STENCIL_LENGTH (700) //has to be an integer (lattice points) (600 ->3000kb)
 #define STENCIL_WIDTH (20) //has to be an integer (lattice points) (40 ->200kb)
 #define STENCIL_MAXPOINTS ((int) ((fmax(STENCIL_LENGTH,STENCIL_WIDTH)+1)*(fmax(STENCIL_LENGTH,STENCIL_WIDTH)+1)))
-//#define STENCIL_MAXPOINTS ((int) ((floor(STENCIL_LENGTH*M_SQRT1_2)*2+1)*floor(STENCIL_WIDTH*M_SQRT1_2)+ceil(STENCIL_LENGTH*M_SQRT1_2)))
-//#define STENCIL_MAXPOINTS ((STENCIL_LENGTH+3)*(STENCIL_WIDTH+3))
 #define NUM_SLABS (STENCIL_LENGTH/10)
 
 
@@ -130,11 +127,6 @@ struct position_struct {
     double *stencil_subtraction_mean;
     double *stencil_subtraction_std;
     double *stencil_subtraction_smooth;
-
-    //stencil division (background given by Dko)
-    //double *stencil_division_mean;
-    //double *stencil_division_std;
-    //double *stencil_division_smooth;
 
     //jet projection
     int length_up;
