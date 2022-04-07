@@ -11,6 +11,8 @@
  * gzip CD69negDPCTCFKOR1R2_ch_17_17_5kb_coarsened5kb.bin
  */
 
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -22,7 +24,6 @@
 #include <time.h>
 #include "gplist_util2.h"
 #include "data_structure.h"
-//#include "data_structureHeLa.h"
 
 int read_depth(struct data_struct *dt);
 int read_hic(const char *filename, struct gplist_header_struct **data, int chr);
@@ -39,7 +40,6 @@ int Gaussian_filter_subtraction(struct condition_struct *condition, int num_sect
 int Gaussian_filter_background(struct condition_struct *condition, int num_sectors);
 int jet_depth(struct condition_struct *condition, int num_sectors, double threshold, double resolution);
 
-//atan4?
 double angle(double x, double y){
     double theta;
     if(y>0) {
@@ -74,7 +74,6 @@ int main(int argc, char *argv[]){
     char buffer[8192];
     double x0, x1;
     double theta;
-    //char chrID[100];
     int k, chr_num, chr_num_read, chr_num_prev;
     int i;
     FILE *fg=stdin;
@@ -84,7 +83,6 @@ int main(int argc, char *argv[]){
     int num_conditions=(int)(sizeof(condition)/sizeof(*condition));
     struct point_stencil *point=NULL;
 
-    //rad=RADIUS_PROTRACTOR;
     n=NUM_SLABS;
 
     printf("# $Header$\n");
@@ -121,28 +119,12 @@ int main(int argc, char *argv[]){
                         exit(EXIT_FAILURE);
                     }
                     break;
-                /*case 'R':
-                    if ((resolution=atof(optarg))<0) {
-                        fprintf(stderr, "resolution R must be non-negative.\n");
-                        exit(EXIT_FAILURE);
-                    }
-                    break;*/
                 case 'n':
                     if ((n=atoi(optarg))<=0) {
                         fprintf(stderr, "number of sectors  must be positive.\n");
                         exit(EXIT_FAILURE);
                     }
                     break;
-                /*case 'f':
-                  if ((fg=fopen(optarg, "rt"))==NULL) {
-                    if (strcmp(optarg, "-")==0) fg=stdin;
-                    else {
-                      fprintf(stderr, "Cannot open file \"%s\" (%i::%s)\n", optarg, errno, strerror(errno));
-                      exit(EXIT_FAILURE);
-                    }
-                  }
-                    flag_read_from_bed_file=0;
-                  break;*/
                 default:
                     fprintf(stderr, "Flag %c unknown.\n", ch);
                 case 'h':
@@ -174,11 +156,8 @@ int main(int argc, char *argv[]){
     while (fgets(buffer, sizeof(buffer)-1, fg)!=NULL) {
         if(buffer[0]=='P'){
             if (sscanf(buffer,"%*s %*s %d", &chr_num_read)) {
-                //if(chrID[0]>='0' && chrID[0]<='9') {
-                    //chr_num_read=atoi(chrID);
                     maxIndexOfChromosomes=MAX(maxIndexOfChromosomes, chr_num_read);
                     num_jet_candidates++;
-                //}
             }
         }
     }
@@ -189,8 +168,6 @@ int main(int argc, char *argv[]){
             printf("# Warning: Curtailing num_jet_candidates = %i to %i\n", num_jet_candidates, MAX_INDEX_OF_POSITIONS);
             num_jet_candidates=MAX_INDEX_OF_POSITIONS;
         }
-
-
             
         for(replicate=0;replicate<num_replicates;replicate++) {
             data[replicate].num_positions=num_jet_candidates;
@@ -208,14 +185,12 @@ int main(int argc, char *argv[]){
         condition[i].num_positions=condition[i].data[0]->num_positions;
         MALLOC(condition[i].position,condition[i].num_positions);
         }
-        //for (i=0;i<num_conditions;i++) printf("cond %d num_pos %d\n",i,condition[i].num_positions);
         
 
     printf("# Info: Second read.\n");
     replicate=0;
     while (fgets(buffer, sizeof(buffer)-1, fg)!=NULL && k<data[0].num_positions) {
         if(buffer[0]=='P'){
-            //printf("%s",buffer);
             if (sscanf(buffer,"%s %d %d %lf %lf %lf %lf %lf %lf %lf %lf", label,&k,&chr_num_read,&x0,&x1,&angle0,&angle1,&angle2,&strength0,&strength1,&strength2) && k<data[0].num_positions) {
                 
                 for(replicate=0;replicate<num_replicates;replicate++) {
@@ -227,11 +202,9 @@ int main(int argc, char *argv[]){
                 condition[0].position[k].angle=angle0;
                 condition[1].position[k].angle=angle1;
                 condition[2].position[k].angle=angle2;
-                //condition[3].position[k].angle=angle3;
                 condition[0].position[k].strength=strength0;
                 condition[1].position[k].strength=strength1;
                 condition[2].position[k].strength=strength2;
-                //condition[3].position[k].strength=strength3;
                 for (i=0;i<num_conditions;i++) {
                     condition[i].position[k].flag_has_stencil=0;
                     strcpy(condition[i].position[k].label, label);
@@ -263,7 +236,6 @@ int main(int argc, char *argv[]){
                         k=atoi(positionID)-1;
                         for (i=0;i<num_conditions;i++) condition[i].position[k].flag_has_stencil=1;
                         printf("%s\n",condition[0].position[k].label);
-	//printf("%s [ %lf , %lf ]\n",data[replicate].position[k].label,data[replicate].position[k].start, data[replicate].position[k].end);
                     }
                 }
             }
@@ -285,7 +257,6 @@ int main(int argc, char *argv[]){
         printf("# Info: Generating grid of points in rectangle (stencil).\n");
     for(replicate=0;replicate<num_replicates;replicate++) {
         printf("# Info: Working on replicate %s\n", data[replicate].ident);
-	//printf("# Woking %s : %d [ %lf , %lf ]\n",data[replicate].position[k].label,data[replicate].position[k].chromosome,data[replicate].position[k].start, data[replicate].position[k].end);
         for(k=0; k<data[replicate].num_positions; k++) if(data[replicate].parent->position[k].flag_has_stencil){
             printf("# Info: Working on candidate %s, in chromosome %d, replicate %s\n",
                    data[replicate].position[k].label,data[replicate].position[k].chromosome,data[replicate].ident);
@@ -351,9 +322,6 @@ int main(int argc, char *argv[]){
             
             //Gaussian filter on subtraction stencil
             for (i=0;i<num_conditions;i++) Gaussian_filter_subtraction(&(condition[i]),n);
-            
-            //divide by background
-            //for (i=0;i<num_conditions;i++) divide_condition(&(condition[i]), n);
             
             //Gaussian filter on background
             for (i=0;i<num_conditions;i++) Gaussian_filter_background(&(condition[i]),n);
@@ -568,8 +536,6 @@ int read_depth(struct data_struct *dt)
                         if (dt->BAM[chr].maxIndex==-1) strcpy(dt->BAM[chr].chromosomeName, chrID);
                         dt->BAM[chr].maxIndex=MAX(dt->BAM[chr].maxIndex,index);
                     }
-                    
-                    //if ((index<MAX_LENGTH_BAM) && (index>=0)) if((chr>0) && (chr<=UPPER_BOUND_CHR)) (*data)[chr + index*UPPER_BOUND_CHR]=+depth;
                 }
             }
         }
@@ -611,19 +577,13 @@ int read_depth(struct data_struct *dt)
                     
                     index=(int)(locus/resolution-CHROMOSOME_OFFSET);
                     /* At this stage, we keep track only of max of chr and max of index. */
-                    //dt->maxIndexOfChromosomes=MAX(dt->numberOfChromosomes, chr);
                     if ((chr>=0) && (chr<=dt->maxIndexOfChromosomes)) {
                         if ((index>=0) && (index<=dt->BAM[chr].maxIndex)) dt->BAM[chr].depth[index]+=depth;
-//                        if (dt->BAM[chr].maxIndex==-1) strcpy(dt->BAM[chr].chromosomeName, chrID);
-//                        dt->BAM[chr].maxIndex=MAX(dt->BAM[chr].maxIndex,index);
                     }
-                    
-                    //if ((index<MAX_LENGTH_BAM) && (index>=0)) if((chr>0) && (chr<=UPPER_BOUND_CHR)) (*data)[chr + index*UPPER_BOUND_CHR]=+depth;
                 }
             }
         }
 
-    
     /* End of copied code */
     fclose(fg);
 
@@ -733,7 +693,6 @@ int stencil_grid(double theta, int n, struct point_stencil **point){
 int generate_points_stencil(struct data_struct *dt, int k, int n, struct point_stencil *point,int *num_points){
     double theta = dt->parent->position[k].angle * M_PI/180.;
 
-    //printf("#p2 theta = %.16G\n",theta);
     *num_points = stencil_grid(theta,n,&point);
     dt->parent->position[k].stencil_num_points = *num_points;
     if((*num_points)<n) {
@@ -798,9 +757,7 @@ int stencil_background(struct data_struct *dt, int k, struct point_stencil *poin
     if (dt->expected==NULL) { fprintf(stderr, "Error: dt->expected==NULL unexpected in line %i of %s\n", __LINE__, __FILE__); exit(EXIT_FAILURE); }
     if (point==NULL) { fprintf(stderr, "Pointer 'point' is NULL\n"); exit(EXIT_FAILURE); }
     if ((k>= dt->num_positions) || (k<0)) { fprintf(stderr, "k=%i out of bounds [0,%i]\n", k, dt->num_positions-1); exit(EXIT_FAILURE); }
-    
-    //MALLOC(background, n);
-    
+        
     for(sector_number=0;sector_number<n;sector_number++) background[sector_number]=0.; //initialisation
 
     for(i=0;i<num_points;i++) {
@@ -850,15 +807,12 @@ int stencil_condition(struct condition_struct *condition, int n){
             
             //calculate mean
             m0=0.;
-            //printf("%s k=%d j=%d",condition->ident,k,j);
             for(replicate=0; replicate<condition->num_replicates; replicate++){
                 if(condition->data[replicate]->position[k].whitelines[j] < tolerance_whitelines){
                     condition->position[k].stencil_mean[j]+= condition->data[replicate]->position[k].stencil[j];
                     m0++;
                     }
-                //printf("  %d %g",condition->data[replicate]->position[k].whitelines[j], condition->data[replicate]->position[k].panoramic[j]);
             }
-            //printf("\n");
             if(m0<1) condition->position[k].stencil_mean[j]= nan("1");
             else condition->position[k].stencil_mean[j]*= 1./m0;
 
@@ -884,30 +838,23 @@ int background_condition(struct condition_struct *condition, struct data_struct 
     for(k=0; k<condition->num_positions; k++) if(condition->position[k].flag_has_stencil){
         MALLOC(condition->position[k].stencil_background_mean,n);
         MALLOC(condition->position[k].stencil_background_std,n);
-        //num_points=condition->position[k].stencil_num_points;
-        //tolerance_whitelines=TOLWHITELINES*num_points/((double)n);
 
         for(j=0;j<n;j++) {
             condition->position[k].stencil_background_mean[j] = condition->position[k].stencil_background_std[j] = 0.; //initialise
             
             //calculate mean
             m0=0.;
-            //printf("%s k=%d j=%d",condition->ident,k,j);
             for(replicate=6; replicate<num_replicates; replicate++){
                 //if(condition->data[replicate]->position[k].whitelines[j] < tolerance_whitelines){
                     condition->position[k].stencil_background_mean[j]+= data[replicate].position[k].background_stencil[i].stencil[j];
                     m0++;
-                  //  }
-                //printf("  %d %g",condition->data[replicate]->position[k].whitelines[j], condition->data[replicate]->position[k].panoramic[j]);
             }
-            //printf("\n");
             if(m0<1) condition->position[k].stencil_background_mean[j]= nan("1");
             else condition->position[k].stencil_background_mean[j]*= 1./m0;
 
             //calculate std
             if(m0>1){
                 for(replicate=6;replicate<num_replicates;replicate++){
-                    //if(condition->data[replicate]->position[k].whitelines[j] < tolerance_whitelines)
                         condition->position[k].stencil_background_std[j]+= pow(data[replicate].position[k].background_stencil[i].stencil[j] - condition->position[k].stencil_background_mean[j],2);
                 }
                 condition->position[k].stencil_background_std[j] = sqrt(condition->position[k].stencil_background_std[j]/(m0*(m0-1.)));
@@ -931,23 +878,6 @@ int subtraction_condition(struct condition_struct *condition, int n){
     
     return 0;
 }
-
-/*int divide_condition(struct condition_struct *condition, int n){
-    int k,j;
-    //the subtraction stencil effectively inherits the whitelines from stencil_mean
-    
-    for(k=0; k<condition->num_positions; k++) if(condition->position[k].flag_has_stencil){
-        MALLOC(condition->position[k].stencil_division_mean,n);
-        MALLOC(condition->position[k].stencil_division_std,n);
-
-        for(j=0;j<n;j++) {
-            condition->position[k].stencil_division_mean[j] = condition->position[k].stencil_mean[j] / condition->position[k].stencil_background_mean[j];
-            condition->position[k].stencil_division_std[j] = sqrt( (condition->position[k].stencil_std[j] / condition->position[k].stencil_background_mean[j])*((condition->position[k].stencil_std[j] / condition->position[k].stencil_background_mean[j])) + ( condition->position[k].stencil_background_std[j] * condition->position[k].stencil_mean[j] / (condition->position[k].stencil_background_mean[j]*condition->position[k].stencil_background_mean[j]) )*( condition->position[k].stencil_background_std[j] * condition->position[k].stencil_mean[j] / (condition->position[k].stencil_background_mean[j]*condition->position[k].stencil_background_mean[j]) ));
-        }}
-    
-    return 0;
-}*/
-
 
 double Gaussian(double x, double h){
     return exp(-0.5*x*x/(h*h))/(h*M_SQRT2*sqrt(M_PI));
@@ -1040,7 +970,6 @@ int jet_depth(struct condition_struct *condition, int num_sectors, double thresh
         //find first local maximum
         i_max=0;
         i=1;
-        //while (condition->position[k].stencil_smooth[i]>condition->position[k].stencil_smooth[i_max] && i<num_sectors){
         while (condition->position[k].stencil_subtraction_smooth[i] > condition->position[k].stencil_subtraction_smooth[i_max] && i<num_sectors){
             i_max=i;
             i++;
@@ -1048,7 +977,6 @@ int jet_depth(struct condition_struct *condition, int num_sectors, double thresh
         //find last instance before the signal decays below the threshold
         i=i_max;
         i_thrs=0;
-        //while (condition->position[k].stencil_smooth[i]>threshold && i<num_sectors){
         while (condition->position[k].stencil_subtraction_smooth[i] > threshold && i<num_sectors){
             i_thrs=i;
             i++;
