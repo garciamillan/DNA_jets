@@ -17,8 +17,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <time.h>
-//#include "gplist_util2.h"
-#include "rgm_Gfit2.h"
 #include "data_structure.h"
 
 #ifndef PATH_MAX
@@ -39,16 +37,15 @@
 #define TOLWHITELINES (0.1)
 #define MAX_LENGTH_BAM (38841)
 #define LENGHT_EXP (40000)
-//#define LBSTRENGHT_STRONG (3.)//(4.)//(3.)
-#define LBSTRENGHT_MEDIUM (1.)//(3.)//(1.)
+#define LBSTRENGHT_MEDIUM (1.)
 #define LB_STD (0.5)
 #define LENGTH_STAMP (2000.)
 #define UPPER_BOUND_ANGLE_FIT (0.33333*M_PI)
 #define UPPER_BOUND_ANGLE_JET (0.25*M_PI)
 #define JET_OPENING (45.)
 #define BANDWIDTH (1.)
-#define xFITTING_RANGE (8)//(20.)
-#define FITTING_RANGE (6)//(20.)
+#define xFITTING_RANGE (8)
+#define FITTING_RANGE (6)
 #define SHORT_FIT_RANGE_IND (4)
 
 #define DD fprintf(stderr, "%s::%i\n", __FILE__, __LINE__)
@@ -78,7 +75,6 @@
 
 int Gaussian_filter(struct condition_struct *condition, int num_sectors);
 int find_modes(struct condition_struct *condition, int num_sectors);
-int fit_modes(struct condition_struct *condition, int num_sectors, double *label_angle);
 int strength(struct condition_struct *condition, int num_sectors);
 int integrate_panoramic(struct condition_struct *condition,int num_sectors);
 
@@ -163,13 +159,11 @@ double *weights;
 int main(int argc, char *argv[]){
     setlinebuf(stdout);
     int num_positions;// = NUM_CANDIDATES;
-    //struct compartment comp[NUM_CANDIDATES];
     int i,j,k,chr,start,end,num_sectors, i1,rad;
     double WTmean, WTstd, CTCFKOmean, CTCFKOstd, DKOmean, DKOstd;
     int ch;
     char buffer[8192];
     FILE *fg=stdin;
-    //int num_replicates=(int)(sizeof(data)/sizeof(*data));
     int num_conditions=(int)(sizeof(condition)/sizeof(*condition));
 
 
@@ -187,8 +181,6 @@ int main(int argc, char *argv[]){
                     break;
             }
         
-    //char filename[PATH_MAX];
-    //strcpy(filename, "results/CD69negDPKR_jets_170977_PANORAMIC.dat");
 
     {//read input file
         
@@ -228,7 +220,6 @@ int main(int argc, char *argv[]){
         while (fgets(buffer, sizeof(buffer)-1, fg)!=NULL) {
             if(buffer[0]=='P') if(sscanf(buffer,"%*s Pos%d %d %d %d %d %lf %lf %lf %lf %lf %lf %lf", &k,&chr,&start,&end,&index,&angle,&WTmean,&WTstd,&CTCFKOmean,&CTCFKOstd,&DKOmean,&DKOstd)){
                 //I'd like to improve this (generalise it to any number of conditions)
-                //printf("%s",buffer);
                 if(k>=1 && k<=num_positions && index>=0 && index<num_sectors) {
                     label_angle[index]=angle;
                     for (i=0;i<num_conditions;i++){
@@ -262,18 +253,10 @@ int main(int argc, char *argv[]){
             for(j=0;j<num_sectors;j++) condition[i].position[k].offset = MIN(condition[i].position[k].offset,condition[i].position[k].panoramic_mean[j]);
         }
     }
-    
-    /*{//fit Gaussian around mode
-        for (i=0;i<num_conditions;i++) fit_modes(&(condition[i]),num_sectors,label_angle);
-    }*/
 
     {//jet strength
         for (i=0;i<num_conditions;i++) strength(&(condition[i]),num_sectors);
     }
-    
-    /*{//panoramic integral
-        for (i=0;i<num_conditions;i++) integrate_panoramic(&(condition[i]),num_sectors);
-    }*/
     
     {//print ANALYSIS_JETS
         printf("#ANALYSIS_JETS #label, k, chromosome,  start,  end");
@@ -286,17 +269,12 @@ int main(int argc, char *argv[]){
                    condition[0].position[k].label,k,condition[0].position[k].chromosome,(condition[0].position[k].start)/1000.,(condition[0].position[k].end)/1000.);
             for (i=0;i<num_conditions;i++) { if(condition[i].position[k].mode>0) printf(", %.16G",label_angle[condition[i].position[k].mode]); else printf(", nan"); }
             for (i=0;i<num_conditions;i++) printf(", %.16G",condition[i].position[k].strength);
-            //for (i=0;i<num_conditions;i++) printf(", %.16G",condition[i].position[k].panoramic_smooth[condition[i].position[k].mode]);
-            //for (i=0;i<num_conditions;i++) printf(", %.16G",condition[i].position[k].integral_panoramic);
             for (i=0;i<num_conditions;i++) print_jet_classificationSIMPLE(condition[i].position[k].strength);
             printf(",  %.16G\n",RADIUS_PROTRACTOR);
         }
     }
     
     
-    
-    double pan;
-    int ind;
     i1 = ceil(0.5*((-JET_OPENING/90.+1.)*(double)num_sectors-1));
     rad=RADIUS_PROTRACTOR;
     {//print GNUPLOT commands
@@ -327,108 +305,14 @@ int main(int argc, char *argv[]){
                 "#GNUPLOT02_%d set term post eps color solid\n"
                 "#GNUPLOT02_%d set out '%s_gnu_%dMB.eps'\n",
                        k+1,k+1,condition[0].position[k].label,rad/1000000,k+1,k+1,condition[0].position[k].label,rad/1000000);
-                
-                /*printf("#GNUPLOT%d plot '<grep %s[^0-9] '.FILE.'' u 7:8:9 w e pt 4 lc 'black' t \"Wild-type\","
-                       " '<grep %s[^0-9] '.FILE.'' u 7:10:11 w e pt 6 lc 'blue' t \"CTCF ko\","
-                       " '<grep %s[^0-9] '.FILE.'' u 7:12:13 w e pt 8 lc 'red' t \"RAD21 CTCF ko\"\n",
-                       k+1,condition[0].position[k].label,condition[0].position[k].label,condition[0].position[k].label);*/
-                
+                                
                 printf("#GNUPLOT%d plot",k+1);
                 for (i=0;i<num_conditions;i++) {
                     printf(" '<grep %s[^0-9] '.FILE.'' u %s lc '%s' t \"%s\"",condition[0].position[k].label,condition[i].plotting,condition[i].colour,condition[i].ident);
                     if(i<num_conditions-1) printf(",");
                 }
                 printf("\n#GNUPLOT%d\n",k+1);
-            /*for (i=0;i<num_conditions;i++) {
-                ind=condition[i].position[k].mode;
-                pan=condition[i].position[k].panoramic_mean[ind];
-                if(ind>=i1 && !isnan(pan)) printf("#GNUPLOT%d set arrow %d nohead from %.1f,0 to %.1f,%.1f dt '-' lc '%s'\n",k,i+3,label_angle[ind],label_angle[ind],pan,condition[i].colour);
-                else printf("#GNUPLOT%d unset arrow %d\n",i+3);
-            }
-            printf("#GNUPLOT%d plot");
-            for (i=0;i<num_conditions;i++) {
-                printf(" '<grep %s[^0-9] '.FILE.'' u %s lc '%s' t \"%s",k,condition[0].position[k].label,condition[i].plotting,condition[i].colour,condition[i].ident);
-                ind=condition[i].position[k].mode;
-                if(ind>=i1) {
-                    printf(" $\\\\mu=%.1f$ $s=%.2G$",label_angle[ind],condition[i].position[k].strength);
-                    print_jet_classificationGNU(condition[i].position[k].strength);
-                }
-                printf("\"");
-                if(i<num_conditions-1) printf(",");
-            }
-            for (i=0;i<num_conditions;i++) {
-                if(!isnan(condition[i].position[k].est_A*condition[i].position[k].norm)){
-                    ind=condition[i].position[k].mode;
-                    printf(", G(x,%.16G,%.16G,%.16G,%.16G,%.16G,%.16G) lc '%s' w l t ''",
-                           condition[i].position[k].est_A*condition[i].position[k].norm, label_angle[ind], condition[i].position[k].est_sigmasq, condition[i].position[k].offset,label_angle[condition[i].position[k].min_i],label_angle[condition[i].position[k].max_i],condition[i].colour);
-                }}
-                printf("\n#GNUPLOT\n");*/
 
-        }
-            
-        }
-        printf("\n#GNUPLOT\n");
-    }
-    
-    
-    if(0){//print GNUPLOT commands
-        //char filePath[PATH_MAX];,fileName[PATH_MAX];
-    //rad=RADIUS_PROTRACTOR;
-    //if (readlink("/proc/self/fd/1", filePath, sizeof(filePath)-1)!=-1) strncpy(fileName, filePath + 73, PATH_MAX - 73);
-
-        printf("#GNUPLOT set term epslatex standalone color size 15,%g header \"\\\\usepackage{color}\\\\usepackage[dvipsnames]{xcolor}\"\n"
-            "#GNUPLOT set out 'CD69negDPKR_jets_gnu_.tex'\n"
-            "#GNUPLOT FILE = '%s'\n"
-            "#GNUPLOT set format x \"$%%g^\\\\circ$\"\n"
-            "#GNUPLOT set xrange [-90:90]\n"
-            "#GNUPLOT a=-150\n"
-            "#GNUPLOT b=375\n"
-            "#GNUPLOT set yrange [a:b]\n"
-            "#GNUPLOT set arrow 1 from 45.,a to 45.,b nohead dt '.'\n"
-            "#GNUPLOT set arrow 2 from -45.,a to -45.,b nohead dt '.'\n"
-            "#GNUPLOT set zeroaxis\n"
-            "#GNUPLOT set key bottom\n"
-            //"#GNUPLOT max(x,y) = x<y?y:x\n"
-            //"#GNUPLOT min(x,y) = x<y?x:y\n"
-            "#GNUPLOT g(x,A,mu,sigsq) = A*exp(-0.5*(x-mu)**2/sigsq)\n"
-            "#GNUPLOT G(x,A,mu,sigsq,C,a,b) = x<a?1/0: x<b? C+g(x,A,mu,sigsq): 1/0\n"
-            "#GNUPLOT set multiplot layout %g,3 title \"Sum of counts per sector minus expected divided"
-            " by total counts. KR norm. Number of sectors $n=%d$. Radius $r=%d$bp.\"\n#GNUPLOT\n"
-            "#GNUPLOT INF = 0\n#GNUPLOT\n",  ceil(num_positions/3.),panoramic_file,ceil(num_positions/3.)*3,num_sectors,rad);
-
-        int flag_print;
-        for(k=0; k<num_positions; k++) {
-            flag_print=0;
-            for (i=0;i<num_conditions;i++) if(!isnan(condition[i].position[k].est_A*condition[i].position[k].norm)) flag_print++;
-            if (flag_print>0) {
-            printf("#GNUPLOT set title '%s: chr %d [ %.16G , %.16G ]' offset 0,-1\n",
-                   condition[0].position[k].label,condition[0].position[k].chromosome,condition[0].position[k].start, condition[0].position[k].end);
-            
-            for (i=0;i<num_conditions;i++) {
-                ind=condition[i].position[k].mode;
-                pan=condition[i].position[k].panoramic_mean[ind];
-                if(ind>=i1 && !isnan(pan)) printf("#GNUPLOT set arrow %d nohead from %.1f,0 to %.1f,%.1f dt '-' lc '%s'\n",i+3,label_angle[ind],label_angle[ind],pan,condition[i].colour);
-                else printf("#GNUPLOT unset arrow %d\n",i+3);
-            }
-
-            printf("#GNUPLOT plot");
-            for (i=0;i<num_conditions;i++) {
-                printf(" '<grep %s[^0-9] '.FILE.'' u %s lc '%s' t \"%s",condition[0].position[k].label,condition[i].plotting,condition[i].colour,condition[i].ident);
-                ind=condition[i].position[k].mode;
-                if(ind>=i1) {
-                    printf(" $\\\\mu=%.1f$ $s=%.2G$",label_angle[ind],condition[i].position[k].strength);
-                    print_jet_classificationGNU(condition[i].position[k].strength);
-                }
-                printf("\"");
-                if(i<num_conditions-1) printf(",");
-            }
-            for (i=0;i<num_conditions;i++) {
-                if(!isnan(condition[i].position[k].est_A*condition[i].position[k].norm)){
-                    ind=condition[i].position[k].mode;
-                    printf(", G(x,%.16G,%.16G,%.16G,%.16G,%.16G,%.16G) lc '%s' w l t ''",
-                           condition[i].position[k].est_A*condition[i].position[k].norm, label_angle[ind], condition[i].position[k].est_sigmasq, condition[i].position[k].offset,label_angle[condition[i].position[k].min_i],label_angle[condition[i].position[k].max_i],condition[i].colour);
-                }}
-                printf("\n#GNUPLOT\n");
         }
             
         }
@@ -479,84 +363,12 @@ int find_modes(struct condition_struct *condition, int num_sectors){
         //the edges can be mode only if they are local maxima
         if(condition->position[k].panoramic_smooth[i1]>condition->position[k].panoramic_smooth[ind]) CHOOSE_MAX(ind,i1)
         if(condition->position[k].panoramic_smooth[i2]>condition->position[k].panoramic_smooth[ind]) CHOOSE_MAX(ind,i2)
-        //printf("Pos%d %d %d  %g %g %g  %g %g %g\n",k+1,i,i2,prev,current,next,condition->position[k].panoramic_smooth[i-1],condition->position[k].panoramic_smooth[i],condition->position[k].panoramic_smooth[i+1]);
-        //if(k==17) { int j; for(j=50;j<70;j++) printf("%s %d %.16G %.16G\n", condition->position[k].label,j,condition->position[k].panoramic_mean[j],condition->position[k].panoramic_smooth[j]); }
-        
-        
-        //if(k==19) exit(EXIT_FAILURE);
-        //if there's no local maximum, ind==0
+
         condition->position[k].mode=ind;
         }
     return 0;
 }
 
-int fit_modes(struct condition_struct *condition, int num_sectors, double *label_angle){
-    int i,k,num_sectors_in_fit,j;
-    int i1 = ceil(0.5*((-JET_OPENING/90.+1.)*(double)num_sectors-1));
-    int i2 = floor(0.5*((JET_OPENING/90.+1.)*(double)num_sectors-1));
-    int lb_i=i1-SHORT_FIT_RANGE_IND;
-    int ub_i=i2+SHORT_FIT_RANGE_IND;
-
-    printf("#Info: fitting jet candidates in %s\n",condition->ident);
-
-    for(k=0;k<condition->num_positions;k++){
-        condition->position[k].norm=0.;
-        if(condition->position[k].mode>0){
-            condition->position[k].min_i=MAX(lb_i,condition->position[k].mode-FITTING_RANGE);
-            //printf("%d min %d %d %d %.16G",k,lb_i,condition->position[k].mode-FITTING_RANGE,condition->position[k].min_i,label_angle[condition->position[k].min_i]);
-            condition->position[k].max_i=MIN(ub_i,condition->position[k].mode+FITTING_RANGE);
-            //printf(" max %d %d %d %.16G\n",ub_i,condition->position[k].mode+FITTING_RANGE,condition->position[k].max_i,label_angle[condition->position[k].max_i]);
-
-            //calculate norm
-            num_sectors_in_fit=0;
-            for(i=condition->position[k].min_i;i<=condition->position[k].max_i;i++) if(condition->position[k].panoramic_std[i]>LB_STD){
-                condition->position[k].norm+=condition->position[k].panoramic_smooth[i] - condition->position[k].offset;
-                num_sectors_in_fit++;
-            }
-            if(num_sectors_in_fit>2){
-                MALLOC(xdata_fit,num_sectors_in_fit);
-                MALLOC(ydata_fit,num_sectors_in_fit);
-                MALLOC(weights,num_sectors_in_fit);
-
-                //prepare data for fit
-                j=0;
-                for(i=condition->position[k].min_i;i<=condition->position[k].max_i;i++) if(condition->position[k].panoramic_std[i]>LB_STD){
-                    xdata_fit[j]= label_angle[i];
-                    ydata_fit[j]= (condition->position[k].panoramic_smooth[i] - condition->position[k].offset)/(condition->position[k].norm);
-                    weights[j++]= pow(condition->position[k].panoramic_std[i]/(condition->position[k].norm),-2.);
-
-                }
-                //fit
-                rgm_gsl_Gauss_fit(xdata_fit, ydata_fit, weights, num_sectors_in_fit, &(condition->position[k].est_A), label_angle[condition->position[k].mode], &(condition->position[k].est_sigmasq), &(condition->position[k].std_A), &(condition->position[k].std_sigmasq));
-            
-                free(xdata_fit);
-                free(ydata_fit);
-                free(weights);
-            } else { condition->position[k].est_A=condition->position[k].est_sigmasq=condition->position[k].std_A=condition->position[k].std_sigmasq=nan("1"); }
-        } else { condition->position[k].est_A=condition->position[k].est_sigmasq=condition->position[k].std_A=condition->position[k].std_sigmasq=nan("1"); }
-    }
-    return 0;
-}
-
-int old_strength(struct condition_struct *condition,int num_sectors){
-    int i,k;
-    int i1 = ceil(0.5*((-JET_OPENING/90.+1.)*(double)num_sectors-1));
-    int i2 = floor(0.5*((JET_OPENING/90.+1.)*(double)num_sectors-1));
-    double excess,count;
-    
-    for(k=0;k<condition->num_positions;k++){
-    if(condition->position[k].mode>0){
-        //excess
-        excess = 0.;
-        for(i=i1;i<=i2;i++) {
-            count=condition->position[k].panoramic_mean[i];
-            if (count>0) excess+=count;
-        }
-        //strength
-        condition->position[k].strength= PREFSTRENGTH * condition->position[k].norm * excess * condition->position[k].panoramic_smooth[condition->position[k].mode] / condition->position[k].est_sigmasq ;
-    }}
-    return 0;
-}
 
 int strength(struct condition_struct *condition,int num_sectors){
     int k;
