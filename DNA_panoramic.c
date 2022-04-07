@@ -1,6 +1,6 @@
 /*
  * $Header: /Users/garciamillan/Documents/uni/ImperialCL/DNAfolding/HiC_2kb/contactdomains/results22_replicates/gplist-master/DNA_jets_replicates.c$
- * COMPILE: cc -O3 -Wall -o Jets DNA_panoramic.c gplist_util2.c rgm_Gfit.c -lm -lgsl -lgslcblas
+ * COMPILE: cc -O3 -Wall -o Jets DNA_panoramic.c gplist_util2.c -lm -lgsl -lgslcblas
  * EXECUTE: ./Jets > test.dat
  * EXECUTE: ./Jets -r 500000 -R 5000 -n 17 > test.dat
  * date: Fri 17 Apr 2020 13:19:16 BST
@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <time.h>
 #include "gplist_util2.h"
-#include "rgm_Gfit.h"
 #include "data_structure.h"
 
 int read_depth(struct data_struct *dt);
