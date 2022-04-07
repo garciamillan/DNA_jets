@@ -31,7 +31,6 @@ int protractor_grid(double rad, const double resolution, int n, struct point_pro
 int panoramic_curve(struct data_struct *dt, int k, struct point_protractor *point, int num_points, int n, const double resolution);
 int panoramic_condition(struct condition_struct *condition, double tolerance_whitelines, int n);
 
-//atan4?
 double angle(double x, double y){
     double theta;
     if(y>0) {
@@ -49,8 +48,6 @@ int sector(double x, double y, int n){
     if (floor((1.25-theta/M_PI))==1) return n-1;
     return floor(n*(1.25-theta/M_PI)); //this way s increases as x increases
 }
-
-
 
 int main(int argc, char *argv[]){
     setlinebuf(stdout);
@@ -95,8 +92,6 @@ int main(int argc, char *argv[]){
     
     printf("# Info: PID: %i\n", (int)getpid());
     
-
-    
     while ((ch = getopt(argc, argv, "r:n:h")) != -1)
             switch (ch) {
                 case 'r':
@@ -105,28 +100,12 @@ int main(int argc, char *argv[]){
                         exit(EXIT_FAILURE);
                     }
                     break;
-                /*case 'R':
-                    if ((resolution=atof(optarg))<0) {
-                        fprintf(stderr, "resolution R must be non-negative.\n");
-                        exit(EXIT_FAILURE);
-                    }
-                    break;*/
                 case 'n':
                     if ((n=atoi(optarg))<=0) {
                         fprintf(stderr, "number of sectors  must be positive.\n");
                         exit(EXIT_FAILURE);
                     }
                     break;
-                /*case 'f':
-                  if ((fg=fopen(optarg, "rt"))==NULL) {
-                    if (strcmp(optarg, "-")==0) fg=stdin;
-                    else {
-                      fprintf(stderr, "Cannot open file \"%s\" (%i::%s)\n", optarg, errno, strerror(errno));
-                      exit(EXIT_FAILURE);
-                    }
-                  }
-                    flag_read_from_bed_file=0;
-                  break;*/
                 default:
                     fprintf(stderr, "Flag %c unknown.\n", ch);
                 case 'h':
@@ -177,7 +156,6 @@ int main(int argc, char *argv[]){
         for(replicate=0;replicate<num_replicates;replicate++) {
             data[replicate].num_positions=num_jet_candidates;
             MALLOC(data[replicate].position, data[replicate].num_positions);
-//#warning "Never free data[replicate].position, because it has been shifted."
         }
     rewind(fg);
 
@@ -256,25 +234,12 @@ int main(int argc, char *argv[]){
     }
     
     int j;
-        /*for(k=0; k<data[0].num_positions; k++){
-        for(j=0;j<n;j++){
-        printf("k=%d j=%d",k,j);
-            for(replicate=0; replicate<num_replicates; replicate++){
-            printf("  %s %d %g",data[replicate].ident,data[replicate].position[k].whitelines[j], data[replicate].position[k].panoramic[j]);
-        }
-        printf("\n");
-
-        }}*/
     
     {//group replicates by condition, calculate mean and std panoramics
         for (i=0;i<num_conditions;i++) panoramic_condition(&(condition[i]),tolerance_whitelines,n);
     }
     
-    
-    //int j;
     double label_angle[n];
-
-    
     for(i=0;i<n;i++) label_angle[i]=90.*(-1.+(1.+2.*(double)i)/(double)n);
 
     
@@ -298,7 +263,6 @@ int main(int argc, char *argv[]){
     if (readlink("/proc/self/fd/1", filePath, sizeof(filePath)-1)!=-1) strncpy(fileName, filePath + 73, PATH_MAX - 73);
                 
         printf("#GNUPLOT00 FILE = '%s'\n"
-            //"#GNUPLOT0 set format x \"%%gº\"\n"
             "#GNUPLOT00 set xrange [-90:90]\n"
             "#GNUPLOT00 a=-200\n"
             "#GNUPLOT00 b=300\n"
@@ -309,10 +273,8 @@ int main(int argc, char *argv[]){
             "#GNUPLOT00 set ylabel 'Strength'\n"
             "#GNUPLOT00 set key out horizontal bottom\n"
             "#GNUPLOT00 set zeroaxis\n"
-            //"#GNUPLOT00 title '%s: chr %d [ %.16G , %.16G ]'\n"
             "#GNUPLOT00\n"
                "#GNUPLOT00\n", fileName);
-        //,data[0].position[k].label,data[0].position[k].chromosome,data[0].position[k].start, data[0].position[k].end);
         
         for(k=0; k<data[0].num_positions; k++) {
             printf("#GNUPLOT01_%d set term 'svg'\n"
@@ -324,37 +286,6 @@ int main(int argc, char *argv[]){
                    " '<grep %s[^0-9] '.FILE.'' u 7:10:11 w e pt 6 lc 'blue' t \"CTCF ko\","
                    " '<grep %s[^0-9] '.FILE.'' u 7:12:13 w e pt 8 lc 'red' t \"RAD21 CTCF ko\"\n",
                    k,data[0].position[k].label,data[0].position[k].label,data[0].position[k].label);
-        }
-
-    }
-    
-    if(0){//print GNUPLOT commands
-    char filePath[PATH_MAX],fileName[PATH_MAX];
-    if (readlink("/proc/self/fd/1", filePath, sizeof(filePath)-1)!=-1) strncpy(fileName, filePath + 73, PATH_MAX - 73);
-
-        printf("#GNUPLOT set term epslatex standalone color size 15,%g header \"\\\\usepackage{color}\\\\usepackage[dvipsnames]{xcolor}\"\n"
-            "#GNUPLOT set out 'CD69negDPKR_jets_gnu_.tex'\n"
-            "#GNUPLOT FILE = '%s'\n"
-            "#GNUPLOT set format x \"$%%g^\\\\circ$\"\n"
-            "#GNUPLOT set xrange [-90:90]\n"
-            "#GNUPLOT a=-150\n"
-            "#GNUPLOT b=400\n"
-            "#GNUPLOT set yrange [a:b]\n"
-            "#GNUPLOT set arrow from 45.,a to 45.,b nohead dt '.'\n"
-            "#GNUPLOT set arrow from -45.,a to -45.,b nohead dt '.'\n"
-            "#GNUPLOT set key top\n"
-            "#GNUPLOT set zeroaxis\n"
-            "#GNUPLOT set multiplot layout %g,3 title \"Sum of counts per sector minus expected divided"
-            " by total counts. KR norm. Number of sectors $n=%d$. Radius $r=%g$.\"\n#GNUPLOT\n"
-            "#GNUPLOT\n", ceil(data[0].num_positions/3.)*3, fileName, ceil(data[0].num_positions/3.),n,rad);
-        
-        for(k=0; k<data[0].num_positions; k++) {
-            printf("#GNUPLOT set title '%s: chr %d [ %.16G , %.16G ]' offset 0,-1\n",
-                   data[0].position[k].label,data[0].position[k].chromosome,data[0].position[k].start, data[0].position[k].end);
-            printf("#GNUPLOT plot '<grep %s[^0-9] '.FILE.'' u 7:8:9 w e pt 4 lc 'black' t \"WT\","
-                   " '<grep %s[^0-9] '.FILE.'' u 7:10:11 w e pt 6 lc 'blue' t \"CTCFKO\","
-                   " '<grep %s[^0-9] '.FILE.'' u 7:12:13 w e pt 8 lc 'red' t \"DKO\"\n",
-                   data[0].position[k].label,data[0].position[k].label,data[0].position[k].label);
         }
 
     }
@@ -408,8 +339,6 @@ int read_depth(struct data_struct *dt)
                         if (dt->BAM[chr].maxIndex==-1) strcpy(dt->BAM[chr].chromosomeName, chrID);
                         dt->BAM[chr].maxIndex=MAX(dt->BAM[chr].maxIndex,index);
                     }
-                    
-                    //if ((index<MAX_LENGTH_BAM) && (index>=0)) if((chr>0) && (chr<=UPPER_BOUND_CHR)) (*data)[chr + index*UPPER_BOUND_CHR]=+depth;
                 }
             }
         }
@@ -418,7 +347,6 @@ int read_depth(struct data_struct *dt)
         printf("# Warning: Curtailing dt->maxIndexOfChromosomes=%i to %i\n", dt->maxIndexOfChromosomes, MAX_INDEX_OF_CHROMOSOMES);
         dt->maxIndexOfChromosomes=MAX_INDEX_OF_CHROMOSOMES;
     }
-    
     
     /* Now we know the maximum index of the chromosomes and the maximum indeces of those ... */
     for (chr=0; chr<=dt->maxIndexOfChromosomes; chr++) {
@@ -451,19 +379,13 @@ int read_depth(struct data_struct *dt)
                     
                     index=(int)(locus/resolution-CHROMOSOME_OFFSET);
                     /* At this stage, we keep track only of max of chr and max of index. */
-                    //dt->maxIndexOfChromosomes=MAX(dt->numberOfChromosomes, chr);
                     if ((chr>=0) && (chr<=dt->maxIndexOfChromosomes)) {
                         if ((index>=0) && (index<=dt->BAM[chr].maxIndex)) dt->BAM[chr].depth[index]+=depth;
-//                        if (dt->BAM[chr].maxIndex==-1) strcpy(dt->BAM[chr].chromosomeName, chrID);
-//                        dt->BAM[chr].maxIndex=MAX(dt->BAM[chr].maxIndex,index);
                     }
                     
-                    //if ((index<MAX_LENGTH_BAM) && (index>=0)) if((chr>0) && (chr<=UPPER_BOUND_CHR)) (*data)[chr + index*UPPER_BOUND_CHR]=+depth;
                 }
             }
         }
-
-    
     /* End of copied code */
     fclose(fg);
 
@@ -550,7 +472,6 @@ int protractor_grid(double rad, const double resolution, int n, struct point_pro
     }
     
     return i;
-
 }
 
 int panoramic_curve(struct data_struct *dt, int k, struct point_protractor *point, int num_points, int n, const double resolution){
@@ -579,10 +500,7 @@ int panoramic_curve(struct data_struct *dt, int k, struct point_protractor *poin
         if ((epos<0) || (epos>=LENGHT_EXP)) { fprintf(stderr, "Error: epos=%i out of bounds 0..%i\n", epos, LENGHT_EXP);  exit(EXIT_FAILURE); }
         
         count = gplist_fetch_count(dt->hic,x_bpr,y_bpr) - dt->expected[epos];
-        //printf("%s k=%d x_bpr=%g y_bpr=%g count=%g\n",dt->ident,k,x_bpr,y_bpr,count);
-        //count=gplist_fetch_count(dt->hic, x_bp/resolution, y_bp/resolution) - dt->expected[(int)floor(fabs((x_bp-y_bp)/resolution))];
         dt->position[k].panoramic[sector_number]+= count;
-        //printf("%s::%i %s k=%d i=%d count=%g dt->position[%i].panoramic[%i]=%g dt->position[%i].whitelines[%i]=%d\n",__FILE__,__LINE__,dt->ident,k,i,count,k,sector_number, dt->position[k].panoramic[sector_number],k,sector_number,dt->position[k].whitelines[sector_number]);
 
         chr_num=dt->position[k].chromosome;
         
@@ -592,25 +510,15 @@ int panoramic_curve(struct data_struct *dt, int k, struct point_protractor *poin
         if (((int)(y_bp/resolution-CHROMOSOME_OFFSET) > dt->BAM[chr_num].maxIndex) || ((int)(y_bp/resolution-CHROMOSOME_OFFSET)<0)) dt->position[k].whitelines[sector_number]++;
         else if(dt->BAM[chr_num].depth[(int)(y_bp/resolution-CHROMOSOME_OFFSET)]==0) dt->position[k].whitelines[sector_number]++;
         
-        //printf("%s k=%d i=%d count=%g %g wl %d  %d %d %d\n",
-        //       dt->ident,k,i,count,dt->position[k].panoramic[sector_number],dt->position[k].whitelines[sector_number],
-        //       (int)(x_bp/resolution-CHROMOSOME_OFFSET),(int)(y_bp/resolution-CHROMOSOME_OFFSET), dt->BAM[chr_num].maxIndex);
-
     }
     
     //normalise by total counts
     for(sector_number=0;sector_number<n;sector_number++) dt->position[k].panoramic[sector_number] *= PREF/dt->total_counts;
-        
-    //for(sector_number=0;sector_number<n;sector_number++) {
-    //    printf("%s k=%d sector=%d,  %d  %g\n",dt->ident,k,sector_number,dt->position[k].whitelines[sector_number],dt->position[k].panoramic[sector_number] );
-    //}
-    
+            
     return 0;
 }
 
 
-
-    
 int panoramic_condition(struct condition_struct *condition, double tolerance_whitelines, int n){
     int replicate,k,j;
     double m0;
@@ -632,15 +540,12 @@ int panoramic_condition(struct condition_struct *condition, double tolerance_whi
             
             //calculate mean
             m0=0.;
-            //printf("%s k=%d j=%d",condition->ident,k,j);
             for(replicate=0; replicate<condition->num_replicates; replicate++){
                 if(condition->data[replicate]->position[k].whitelines[j] < tolerance_whitelines){
                     condition->position[k].panoramic_mean[j]+= condition->data[replicate]->position[k].panoramic[j];
                     m0++;
                     }
-                //printf("  %d %g",condition->data[replicate]->position[k].whitelines[j], condition->data[replicate]->position[k].panoramic[j]);
             }
-            //printf("\n");
             if(m0<1) condition->position[k].panoramic_mean[j]= nan("1");
             else condition->position[k].panoramic_mean[j]*= 1./m0;
 
