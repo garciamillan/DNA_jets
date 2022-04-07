@@ -1,6 +1,6 @@
 /*
  * $Header: /Users/garciamillan/Documents/uni/ImperialCL/DNAfolding/HiC_2kb/contactdomains/results31_mode_curvature/mode_curvature.c$
- * COMPILE: cc -O3 -Wall -o max panoramic_mode.c rgm_Gfit2.c -lm -lgsl -lgslcblas
+ * COMPILE: cc -O3 -Wall -o max panoramic_mode.c -lm -lgsl -lgslcblas
  * EXECUTE: ./max > test.dat
  * date: Sat 20 Mar 2021 13:58:42 GMT
  *
