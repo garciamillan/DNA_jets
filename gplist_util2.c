@@ -13,7 +13,7 @@
 
 #include "gplist_util2.h"
 
-#include "gplist_git_stamps.h"
+//#include "gplist_git_stamps.h"
 
 #define GPLIST_END_OF_LIST (-1)
 
@@ -82,7 +82,7 @@ int objects_read;
 int is_popen=0;
 
 printf("# Info: Version of git_version_string to follow.\n");
-printf("%s", git_version_string);
+//printf("%s", git_version_string);
 printf("# Info: CVS Header of this file: $Header: /home/ma/p/pruess/.cvsroot/gplist/gplist_util.c,v 1.2 2019/05/11 21:52:57 pruess Exp $\n");
 printf("# Info: CVS/git ID of this file: $Id: gplist_util.c,v 1.2 2019/05/11 21:52:57 pruess Exp $\n");
 
