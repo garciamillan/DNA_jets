@@ -93,8 +93,6 @@ int main(int argc, char *argv[]){
 
     if(flag_BAMfile) { read_depth(maxIndex, fg, BAMdepth); }
     
-    //printf("%.16G  %.16G\n",BAMdepth[0], BAMdepth[1]);
-
     expected_data(hic_file, flag_BAMfile, BAMdepth, resolution);
     
     
@@ -107,21 +105,16 @@ return 0;
 
 int read_depth(int maxind, FILE *fg, double *BAM_depth)
 {
-    //FILE *fg;
     char buffer[8192];
     int locus,depth,index,chrID;
 
-    //DD;
     while (fgets(buffer, sizeof(buffer)-1, fg)!=NULL) {
-        //printf("%s",buffer);
         if (sscanf(buffer,"chr%d %d %d",&chrID,&locus,&depth)) {
             index=(int)(locus/resolution-CHROMOSOME_OFFSET);
             if ((index>=0) && (index<maxind-CHROMOSOME_OFFSET)) BAM_depth[index]+=depth;
         }
     }
     fclose(fg);
-    
-    //for(index=0;index<50;index++) printf("%d  %.16G\n",index,BAM_depth[index]);
     
     printf("# Info: Finished reading BAM file.\n");
 
